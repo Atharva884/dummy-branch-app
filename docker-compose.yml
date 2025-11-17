@@ -1,7 +1,6 @@
 services:
   db:
     image: postgres:16
-    profiles: ["dev", "staging", "prod"]
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -19,46 +18,39 @@ services:
       resources:
         limits:
           memory: ${DB_MEMORY_LIMIT}
-          cpus: '${DB_CPUS}'
+          cpus: "${DB_CPUS}"
         reservations:
           memory: ${DB_MEMORY_RESERVATION}
     restart: unless-stopped
 
   api:
     build: .
-    profiles: ["dev", "staging", "prod"]
     environment:
-      FLASK_ENV: ${FLASK_ENV}
-      FLASK_DEBUG: ${FLASK_DEBUG}
+      APP_ENV: ${APP_ENV}
       DATABASE_URL: ${DATABASE_URL}
       PORT: ${PORT}
-      PYTHONPATH: /app
       LOG_LEVEL: ${LOG_LEVEL}
-      ENVIRONMENT: ${ENVIRONMENT}
+      API_WORKERS: ${API_WORKERS}
+      FLASK_DEBUG: ${FLASK_DEBUG}
+    volumes:
+      - .:/app
     depends_on:
       db:
         condition: service_healthy
     expose:
       - "${PORT}"
-    command: gunicorn -w ${API_WORKERS} --log-level ${LOG_LEVEL} -b 0.0.0.0:${PORT} wsgi:app
+    command: ["sh", "/entrypoint.sh"]
     deploy:
       resources:
         limits:
           memory: ${API_MEMORY_LIMIT}
-          cpus: '${API_CPUS}'
+          cpus: "${API_CPUS}"
         reservations:
           memory: ${API_MEMORY_RESERVATION}
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:${PORT}/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
   nginx:
     image: nginx:alpine
-    profiles: ["dev", "staging", "prod"]
     ports:
       - "80:80"
       - "443:443"
@@ -66,12 +58,13 @@ services:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
     depends_on:
-      - api
+      api:
+        condition: service_started
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/health"]
-      interval: 30s
-      timeout: 10s
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost/health"]
+      interval: 10s
+      timeout: 5s
       retries: 3
 
 volumes:
