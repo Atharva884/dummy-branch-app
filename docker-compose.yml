@@ -1,36 +1,64 @@
 services:
   db:
     image: postgres:16
+    profiles: ["dev", "staging", "prod"]
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: microloans
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d microloans"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: ${DB_MEMORY_LIMIT}
+          cpus: '${DB_CPUS}'
+        reservations:
+          memory: ${DB_MEMORY_RESERVATION}
+    restart: unless-stopped
 
   api:
     build: .
+    profiles: ["dev", "staging", "prod"]
     environment:
-      FLASK_ENV: development
-      DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/microloans
-      PORT: 8000
+      FLASK_ENV: ${FLASK_ENV}
+      FLASK_DEBUG: ${FLASK_DEBUG}
+      DATABASE_URL: ${DATABASE_URL}
+      PORT: ${PORT}
       PYTHONPATH: /app
+      LOG_LEVEL: ${LOG_LEVEL}
+      ENVIRONMENT: ${ENVIRONMENT}
     depends_on:
       db:
         condition: service_healthy
     expose:
-      - "8000"
-    command: gunicorn -w 2 -b 0.0.0.0:8000 wsgi:app
+      - "${PORT}"
+    command: gunicorn -w ${API_WORKERS} --log-level ${LOG_LEVEL} -b 0.0.0.0:${PORT} wsgi:app
+    deploy:
+      resources:
+        limits:
+          memory: ${API_MEMORY_LIMIT}
+          cpus: '${API_CPUS}'
+        reservations:
+          memory: ${API_MEMORY_RESERVATION}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:${PORT}/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   nginx:
     image: nginx:alpine
+    profiles: ["dev", "staging", "prod"]
     ports:
       - "80:80"
       - "443:443"
@@ -39,6 +67,12 @@ services:
       - ./nginx/ssl:/etc/nginx/ssl:ro
     depends_on:
       - api
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
   db_data:
