@@ -1,0 +1,28 @@
+# Environment variables
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+
+# Database
+*.db
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker volumes (optional, usually already ignored)
+db_data/
+
+# SSL certificates (you might want to commit these for the assignment)
+# nginx/ssl/*.key
+# nginx/ssl/*.crt
