@@ -23,15 +23,14 @@ def create_app() -> Flask:
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    # Init DB
     db.init_app(app)
-
-    # Structured JSON logging
     setup_logging()
     app.logger.info("Application started with JSON logging")
 
-    # Enable Prometheus metrics only if NOT testing
-    if not app.config.get("TESTING", False):
+    if (
+        not app.config.get("TESTING", False)
+        and os.getenv("DISABLE_METRICS") != "1"
+    ):
         metrics = PrometheusMetrics(app, group_by='endpoint')
         metrics.info('app_info', 'Application info', version='1.0.0')
 
