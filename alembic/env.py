@@ -21,7 +21,7 @@ if db_url:
     config.set_main_option("sqlalchemy.url", db_url)
 
 # Add your model's MetaData object here for 'autogenerate'
-from app.db import Base  # noqa
+from app.database import Base  # noqa
 from app import models  # noqa: F401 ensures models are imported
 
 target_metadata = Base.metadata
