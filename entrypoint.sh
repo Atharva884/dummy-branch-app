@@ -1,3 +1,5 @@
+#!/usr/bin/env sh
+
 echo "Starting API container with APP_ENV=$APP_ENV"
 
 if [ "$APP_ENV" = "dev" ]; then
