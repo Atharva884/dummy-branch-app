@@ -35,6 +35,10 @@ def create_app() -> Flask:
 
     metrics.info('app_info', 'Application info', version='1.0.0')
 
+    if not os.getenv("DISABLE_METRICS"):
+        metrics = PrometheusMetrics(app, group_by='endpoint')
+        metrics.info('app_info', 'Application info', version='1.0.0')
+
     # Register blueprints
     from .routes.health import bp as health_bp
     from .routes.loans import bp as loans_bp

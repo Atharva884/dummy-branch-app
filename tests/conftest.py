@@ -1,6 +1,7 @@
 import pytest
 import sys
 import os
+os.environ["DISABLE_METRICS"] = "1"
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
