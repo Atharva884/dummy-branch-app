@@ -8,7 +8,6 @@ from app.json_logger import JsonFormatter
 from prometheus_flask_exporter import PrometheusMetrics
 
 
-
 def setup_logging():
     handler = logging.StreamHandler()
     handler.setFormatter(JsonFormatter())
@@ -31,11 +30,8 @@ def create_app() -> Flask:
     setup_logging()
     app.logger.info("Application started with JSON logging")
 
-    metrics = PrometheusMetrics(app, group_by='endpoint')
-
-    metrics.info('app_info', 'Application info', version='1.0.0')
-
-    if not os.getenv("DISABLE_METRICS"):
+    # Enable Prometheus metrics only if NOT testing
+    if not app.config.get("TESTING", False):
         metrics = PrometheusMetrics(app, group_by='endpoint')
         metrics.info('app_info', 'Application info', version='1.0.0')
 
