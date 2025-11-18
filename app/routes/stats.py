@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify
 from sqlalchemy import select, func
 
-from ..db import SessionContext
+from ..database import SessionContext
 from ..models import Loan
 
 bp = Blueprint("stats", __name__)

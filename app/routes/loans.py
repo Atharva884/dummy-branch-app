@@ -3,7 +3,7 @@ from sqlalchemy import select
 from uuid import UUID
 from decimal import Decimal
 
-from ..db import SessionContext
+from ..database import SessionContext
 from ..models import Loan
 from ..schemas import CreateLoanRequest, LoanOut
 

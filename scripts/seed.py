@@ -3,7 +3,7 @@ from uuid import UUID
 from decimal import Decimal
 from sqlalchemy import select
 
-from app.db import SessionContext
+from app.database import SessionContext
 from app.models import Loan
 
 DUMMY_LOANS = [
