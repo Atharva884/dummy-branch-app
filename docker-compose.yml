@@ -24,7 +24,10 @@ services:
     restart: unless-stopped
 
   api:
-    build: .
+    build: .       # Uncomment this line to build the image locally
+    # Use the image from GitHub Container Registry
+    # image: ghcr.io/atharva884/dummy-branch-app:latest 
+    # platform: linux/amd64
     environment:
       APP_ENV: ${APP_ENV}
       DATABASE_URL: ${DATABASE_URL}
