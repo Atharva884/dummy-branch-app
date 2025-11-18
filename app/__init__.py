@@ -3,20 +3,33 @@ import logging
 import os
 
 from .config import Config
+from app.extensions import db
+from app.json_logger import JsonFormatter
+
+
+def setup_logging():
+    handler = logging.StreamHandler()
+    handler.setFormatter(JsonFormatter())
+
+    root = logging.getLogger()
+    root.handlers = [handler]
+
+    log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+    root.setLevel(log_level)
+
 
 def create_app() -> Flask:
     app = Flask(__name__)
-    app.config.from_object(Config())
+    app.config.from_object(Config)
 
-    log_level = os.getenv("LOG_LEVEL", "INFO").upper()
-    numeric_level = getattr(logging, log_level, logging.INFO)
+    # Init DB
+    db.init_app(app)
 
-    logging.basicConfig(level=numeric_level)
+    # Structured JSON logging
+    setup_logging()
+    app.logger.info("Application started with JSON logging")
 
-    app.logger.setLevel(numeric_level)
-    app.logger.info(f"Log level set to {log_level}")
-
-    # Lazy imports to avoid circular deps during app init
+    # Register blueprints
     from .routes.health import bp as health_bp
     from .routes.loans import bp as loans_bp
     from .routes.stats import bp as stats_bp
