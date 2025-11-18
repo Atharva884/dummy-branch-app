@@ -13,9 +13,6 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # ============================================
-  # Job 1: Test Stage
-  # ============================================
   test:
     name: Run Tests
     runs-on: ubuntu-latest
@@ -53,19 +50,14 @@ jobs:
       - name: Run database migrations
         env:
           DATABASE_URL: postgresql+psycopg2://postgres:postgres@localhost:5432/microloans_test
-        run: |
-          alembic upgrade head
+        run: alembic upgrade head
 
       - name: Run tests
         env:
           DATABASE_URL: postgresql+psycopg2://postgres:postgres@localhost:5432/microloans_test
           FLASK_ENV: testing
-        run: |
-          pytest --verbose --tb=short
+        run: pytest --verbose --tb=short
 
-  # ============================================
-  # Job 2: Build Stage
-  # ============================================
   build:
     name: Build Docker Image
     runs-on: ubuntu-latest
@@ -78,9 +70,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -96,10 +85,8 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}
           tags: |
+            type=sha
             type=ref,event=branch
-            type=ref,event=pr
-            type=sha 
-            type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build Docker image
@@ -108,17 +95,16 @@ jobs:
         with:
           context: .
           platforms: linux/amd64
-          push: false
           load: true
+          push: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Save Docker image
+      - name: Save Docker image artifact
         run: |
           IMAGE=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
-          echo "Saving image: $IMAGE"
           docker save "$IMAGE" -o /tmp/image.tar
 
       - name: Upload image artifact
@@ -128,9 +114,6 @@ jobs:
           path: /tmp/image.tar
           retention-days: 1
 
-  # ============================================
-  # Job 3: Security Scan Stage
-  # ============================================
   security-scan:
     name: Security Scan
     runs-on: ubuntu-latest
@@ -146,7 +129,6 @@ jobs:
       - name: Load Docker image
         run: docker load -i /tmp/image.tar
 
-      # Convert multiline tag string to JSON array
       - name: Convert image tags to JSON
         id: tags
         run: |
@@ -176,9 +158,6 @@ jobs:
           severity: "CRITICAL"
           exit-code: "1"
 
-  # ============================================
-  # Job 4: Push Stage (Only on main branch)
-  # ============================================
   push:
     name: Push to Registry
     runs-on: ubuntu-latest
@@ -192,9 +171,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -216,14 +192,14 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}
           tags: |
-            type=sha,prefix={{branch}}-
-            type=raw,value=latest
+            type=sha
+            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
