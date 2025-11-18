@@ -2,7 +2,7 @@ from datetime import datetime
 import uuid
 from sqlalchemy import CheckConstraint, Column, String, Numeric, Integer, text
 from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP
-from .db import Base
+from app.database import Base
 
 class Loan(Base):
     __tablename__ = "loans"
