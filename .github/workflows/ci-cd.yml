@@ -140,31 +140,30 @@ jobs:
           path: /tmp
 
       - name: Load Docker image
-        run: |
-          docker load -i /tmp/image.tar
+        run: docker load -i /tmp/image.tar
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: "${{ fromJSON(needs.build.outputs.image-tag)[0] }}"
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
-          exit-code: '0'
+          format: "sarif"
+          output: "trivy-results.sarif"
+          severity: "CRITICAL,HIGH"
+          exit-code: "0"
 
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: "trivy-results.sarif"
 
       - name: Run Trivy vulnerability scanner (fail on critical)
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: "${{ fromJSON(needs.build.outputs.image-tag)[0] }}"
-          format: 'table'
-          severity: 'CRITICAL'
-          exit-code: '1'
+          format: "table"
+          severity: "CRITICAL"
+          exit-code: "1"
 
   # ============================================
   # Job 4: Push Stage (Only on main branch)
