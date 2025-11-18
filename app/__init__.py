@@ -5,6 +5,8 @@ import os
 from .config import Config
 from app.extensions import db
 from app.json_logger import JsonFormatter
+from prometheus_flask_exporter import PrometheusMetrics
+
 
 
 def setup_logging():
@@ -28,6 +30,10 @@ def create_app() -> Flask:
     # Structured JSON logging
     setup_logging()
     app.logger.info("Application started with JSON logging")
+
+    metrics = PrometheusMetrics(app, group_by='endpoint')
+
+    metrics.info('app_info', 'Application info', version='1.0.0')
 
     # Register blueprints
     from .routes.health import bp as health_bp
