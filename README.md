@@ -23,7 +23,7 @@ A containerized Flask-based microloans API designed for Branch International's f
 
 ## Overview
 
-This project transforms a basic Flask loan API into a production-ready, containerized microservice with:
+This project transforms a basic Flask loan API into a production-ready, containerized application with:
 
 - **Multi-stage Docker builds** for optimized image size and security
 - **Multi-environment support** (dev/staging/prod) with distinct configurations
@@ -59,7 +59,7 @@ The architecture follows a modern containerized pattern with clear separation of
 
 **Key Components:**
 - **Nginx**: Reverse proxy with SSL/TLS termination
-- **Flask API**: RESTful microservice with Gunicorn workers
+- **Flask API**: RESTful service with Gunicorn workers
 - **PostgreSQL**: Relational database with persistent volumes
 - **Prometheus**: Metrics collection and storage
 - **Grafana**: Real-time dashboards
