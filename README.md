@@ -1,6 +1,4 @@
-# Branch Loan API - Production-Ready Microservices Architecture
-
-[![CI/CD Pipeline](https://github.com/atharva884/dummy-branch-app/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/atharva884/dummy-branch-app/actions/workflows/ci-cd.yml)
+# Branch Loan API - Production-Ready Architecture
 
 A containerized Flask-based microloans API designed for Branch International's fintech platform. This implementation demonstrates production-grade DevOps practices including multi-environment deployment, automated CI/CD pipelines, comprehensive observability, and enterprise-level security scanning.
 
@@ -16,7 +14,6 @@ A containerized Flask-based microloans API designed for Branch International's f
 - [Running Different Environments](#running-different-environments)
 - [CI/CD Pipeline](#cicd-pipeline)
 - [Monitoring & Observability](#monitoring--observability)
-- [API Documentation](#api-documentation)
 - [Design Decisions](#design-decisions)
 - [Trade-offs & Future Improvements](#trade-offs--future-improvements)
 - [Troubleshooting](#troubleshooting)
@@ -35,7 +32,7 @@ This project transforms a basic Flask loan API into a production-ready, containe
 - **Comprehensive observability** with Prometheus metrics and Grafana dashboards
 - **Database migrations** using Alembic for schema version control
 - **Health checks** with database connectivity verification
-- **Structured JSON logging** for centralized log aggregation
+- **Structured JSON logging** for production environments
 - **Secure secrets management** using Doppler
 
 **Tech Stack:** Python 3.11, Flask, PostgreSQL 16, Gunicorn, Nginx, Docker, GitHub Actions, Prometheus, Grafana
@@ -44,39 +41,29 @@ This project transforms a basic Flask loan API into a production-ready, containe
 
 ## Architecture
 
-### System Architecture Diagram
+![System Architecture](https://github.com/atharva884/dummy-branch-app/blob/main/architecture-diagram.png)
 
-To visualize the complete architecture, use this prompt with **[Eraser.io](https://www.eraser.io/)**:
+The architecture follows a modern microservices pattern with clear separation of concerns:
 
-```
-Create a system architecture diagram showing:
+**Request Flow:**
+1. Client sends HTTPS request to `branchloans.com` (port 443)
+2. Nginx terminates SSL and forwards to Flask API (port 8000)
+3. Flask processes request with Gunicorn workers
+4. PostgreSQL handles data persistence (port 5432)
+5. Prometheus scrapes metrics from API (port 9090)
+6. Grafana visualizes metrics (port 3000)
 
-1. User/Client layer making HTTPS requests to branchloans.com
-2. Nginx reverse proxy (port 443) handling SSL termination and forwarding to Flask API
-3. Flask API application (port 8000) with multiple Gunicorn workers
-4. PostgreSQL database (port 5432) with persistent volume storage
-5. Prometheus (port 9090) scraping metrics from Flask API
-6. Grafana (port 3000) visualizing Prometheus metrics
-7. GitHub Actions CI/CD pipeline showing: Test → Build → Security Scan → Push to GHCR
-8. Docker containers: nginx, api, db, prometheus, grafana
-9. Volume mounts: db_data (persistent), grafana_data (persistent)
-10. Network flow: HTTPS (443) → HTTP (8000) → PostgreSQL (5432)
-11. Health check endpoints and monitoring flows
+**CI/CD Pipeline:**
+- Test → Build → Security Scan → Push to GitHub Container Registry
+- Automated on every push to main branch and pull requests
 
-Use a modern cloud architecture style with clear service boundaries, arrows showing data flow, and labeled ports. Include a legend showing container types, volumes, and network protocols.
-
-Diagram type: System Architecture / Deployment Diagram
-Style: Modern, clean, professional (AWS/Azure architecture diagram style)
-```
-
-### Key Components
-
-- **Nginx**: Reverse proxy handling SSL/TLS termination, HTTP to HTTPS redirection, and load balancing
-- **Flask API**: RESTful microservice with multiple Gunicorn workers for concurrent request handling
-- **PostgreSQL**: Relational database with health checks and resource limits
-- **Prometheus**: Time-series metrics collection and storage
-- **Grafana**: Real-time visualization dashboards with pre-configured datasources
-- **GitHub Actions**: Automated testing, building, security scanning, and deployment pipeline
+**Key Components:**
+- **Nginx**: Reverse proxy with SSL/TLS termination
+- **Flask API**: RESTful microservice with Gunicorn workers
+- **PostgreSQL**: Relational database with persistent volumes
+- **Prometheus**: Metrics collection and storage
+- **Grafana**: Real-time dashboards
+- **GitHub Actions**: Automated build and deployment pipeline
 
 ---
 
@@ -128,38 +115,11 @@ ping branchloans.com
 # Should respond from 127.0.0.1
 ```
 
-### Step 3: Set Up Environment Configuration
+### Step 3: Environment Configuration
 
-Copy the example environment file and configure it:
+⚠️ **Note for Evaluators:** This repository includes pre-configured `.env.dev`, `.env.staging`, and `.env.prod` files for quick evaluation of this take-home assignment. In production environments, these files would **never** be committed to version control and would instead use secure secrets management (Doppler, AWS Secrets Manager, etc.). The `.gitignore` is configured appropriately for production use.
 
-```bash
-cp .env.dev.example .env.dev
-```
-
-**Edit `.env.dev`** with your preferred settings. For quick start, you can use these values:
-
-```bash
-APP_ENV=dev
-
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=microloans
-DATABASE_URL=postgresql+psycopg2://postgres:postgres@db:5432/microloans
-
-PORT=8000
-LOG_LEVEL=DEBUG
-API_WORKERS=1
-FLASK_DEBUG=1
-DEBUG_METRICS=1
-
-DB_MEMORY_LIMIT=256m
-DB_MEMORY_RESERVATION=128m
-DB_CPUS=0.5
-
-API_MEMORY_LIMIT=256m
-API_MEMORY_RESERVATION=128m
-API_CPUS=0.5
-```
+**For this assignment, no environment setup is required** - the files are ready to use. If you want to customize settings, refer to the [Environment Configuration](#environment-configuration) section.
 
 ### Step 4: Start the Application
 
@@ -188,6 +148,7 @@ make pull
 make up-img-all ENV=dev
 
 # For Apple Silicon Macs (M1/M2/M3)
+# The x86 image works via Rosetta emulation, but if you encounter issues:
 make pull-amd
 make up-img-all ENV=dev
 ```
@@ -293,7 +254,7 @@ Optimized for high-availability production workloads.
 - **Workers:** 4 Gunicorn workers for high concurrency
 - **Resources:** Maximum allocation (1GB RAM, 2.0 CPUs)
 - **Database:** Large PostgreSQL with extensive health checks
-- **Structured Logging:** JSON-formatted logs for centralized aggregation (ELK/Datadog)
+- **Structured Logging:** JSON-formatted logs for centralized aggregation
 - **Data Persistence:** Database volumes persist across container restarts
 
 **Use Case:** Production deployments, handling real customer traffic
@@ -316,7 +277,7 @@ Optimized for high-availability production workloads.
 
 ### Creating Environment Files
 
-Each environment requires its own `.env` file. Use the example template:
+Each environment requires its own `.env` file. For this assignment, these files are pre-configured. If you need to create new ones:
 
 ```bash
 # Create development environment
@@ -330,8 +291,6 @@ cp .env.dev.example .env.prod
 ```
 
 Then customize each file according to the environment's requirements.
-
-⚠️ **Security Note:** Never commit actual `.env` files to version control. The `.gitignore` is configured to exclude these files. Use Doppler or similar secrets management tools for production environments.
 
 ---
 
@@ -408,7 +367,7 @@ This starts all services plus monitoring dashboards:
 
 **Default Grafana Credentials:**
 - Username: `admin`
-- Password: `admin` (change on first login)
+- Password: `admin` (you'll be prompted to change on first login)
 
 ### Viewing Logs
 
@@ -449,15 +408,23 @@ Test → Build → Security Scan → Push (on main branch only)
 
 Each stage must pass before proceeding to the next, ensuring only thoroughly validated code reaches production.
 
+### Pipeline Trigger Behavior
+
+The pipeline is configured to run on:
+- **Push to `main` branch**: Full pipeline including image push to registry
+- **Pull Requests**: Runs tests, builds, and security scans but **does not push** images to registry
+
+This ensures PRs are validated without polluting the container registry with experimental builds.
+
 ### Stage 1: Automated Testing
 
 **Trigger:** Every push or pull request to `main` branch
 
 **What it does:**
-1. Spins up a PostgreSQL test database
-2. Installs Python dependencies with pip caching
-3. Fetches secrets from Doppler vault
-4. Runs Alembic database migrations
+1. Spins up a PostgreSQL test database as a service container
+2. Installs Python dependencies with pip caching for faster builds
+3. Fetches secrets from Doppler vault (production config)
+4. Runs Alembic database migrations to set up test schema
 5. Executes pytest test suite with verbose output
 
 **Why this matters:** Catches regressions and bugs before they reach production. Tests verify:
@@ -490,7 +457,7 @@ Each stage must pass before proceeding to the next, ensuring only thoroughly val
 **Trigger:** After successful build
 
 **What it does:**
-1. Downloads the built Docker image
+1. Downloads the built Docker image from artifacts
 2. Runs **Trivy** security scanner (industry-standard tool)
 3. Scans for CVEs in OS packages and application dependencies
 4. Checks against NVD (National Vulnerability Database)
@@ -502,7 +469,7 @@ Each stage must pass before proceeding to the next, ensuring only thoroughly val
 - **HIGH**: Reported but doesn't block deployment
 - **MEDIUM/LOW**: Logged for review
 
-**Why this matters:** Prevents deployment of images with known exploits. This is critical for fintech applications handling sensitive financial data.
+**Why this matters:** Prevents deployment of images with known exploits, critical for fintech applications handling sensitive financial data.
 
 **Integration:** Results appear in GitHub's Security → Code Scanning tab for tracking and remediation.
 
@@ -518,7 +485,7 @@ Each stage must pass before proceeding to the next, ensuring only thoroughly val
 
 **Registry Location:** `ghcr.io/atharva884/dummy-branch-app`
 
-**Why pull requests don't push:** Prevents polluting the registry with experimental or unmerged code.
+**Why pull requests don't push:** Prevents polluting the registry with experimental or unmerged code. PRs still run all validation stages (test, build, scan) to ensure quality.
 
 ### Secrets Management
 
@@ -544,11 +511,6 @@ Sensitive credentials are never exposed in code or logs:
 3. Select "CI/CD Pipeline" workflow
 4. Click any run to see detailed logs
 
-**Status Badge:** The README includes a badge showing pipeline status:
-- ✅ **Green:** All checks passed
-- ❌ **Red:** Pipeline failed (check logs)
-- 🟡 **Yellow:** Pipeline running
-
 ### Local Testing Before Push
 
 Avoid pipeline failures by testing locally:
@@ -567,12 +529,12 @@ trivy image branchloans:test
 ### Pipeline Performance
 
 **Typical execution time:**
-- Test stage: ~2-3 minutes
-- Build stage: ~1-2 minutes (with cache)
-- Security scan: ~1 minute
-- Push stage: ~30 seconds
+- Test stage: ~40 seconds
+- Build stage: ~45 seconds (with cache)
+- Security scan: ~40 seconds
+- Push stage: ~25 seconds
 
-**Total pipeline time:** ~5-7 minutes from commit to deployed image
+**Total pipeline time:** ~3-4 minutes from commit to deployed image
 
 ---
 
@@ -630,7 +592,7 @@ Open http://localhost:3000/dashboards
 
 ### Structured Logging
 
-The application uses JSON-formatted logging for easy parsing and aggregation:
+The application uses JSON-formatted logging in production for easy parsing and aggregation:
 
 **Log Format:**
 ```json
@@ -646,12 +608,6 @@ The application uses JSON-formatted logging for easy parsing and aggregation:
 ```bash
 make logs ENV=prod
 ```
-
-**Integration Ready:** JSON logs can be ingested by:
-- **ELK Stack** (Elasticsearch, Logstash, Kibana)
-- **Datadog** for APM and log correlation
-- **CloudWatch** on AWS
-- **Splunk** for enterprise logging
 
 ### Health Checks
 
@@ -690,186 +646,9 @@ curl -k https://branchloans.com/health
 
 ---
 
-## API Documentation
-
-### Base URL
-- **HTTPS:** `https://branchloans.com`
-- **HTTP:** Automatically redirects to HTTPS
-
-### Authentication
-⚠️ **Note:** This prototype has no authentication. Production deployments should implement JWT or OAuth2.
-
-### Endpoints
-
-#### Health Check
-```http
-GET /health
-```
-
-**Description:** Verifies API and database connectivity
-
-**Response:**
-```json
-{
-  "status": "ok",
-  "database": "healthy"
-}
-```
-
----
-
-#### List All Loans
-```http
-GET /api/loans
-```
-
-**Description:** Retrieves all loans in the system
-
-**Response:**
-```json
-[
-  {
-    "id": 1,
-    "borrower_id": "usr_india_001",
-    "amount": 5000.00,
-    "currency": "INR",
-    "term_months": 12,
-    "interest_rate_apr": 18.5,
-    "status": "pending",
-    "created_at": "2025-01-15T10:00:00Z"
-  }
-]
-```
-
----
-
-#### Get Loan by ID
-```http
-GET /api/loans/:id
-```
-
-**Path Parameters:**
-- `id` (integer): Loan ID
-
-**Response:**
-```json
-{
-  "id": 1,
-  "borrower_id": "usr_india_001",
-  "amount": 5000.00,
-  "currency": "INR",
-  "term_months": 12,
-  "interest_rate_apr": 18.5,
-  "status": "pending",
-  "created_at": "2025-01-15T10:00:00Z"
-}
-```
-
-**Error Response (404):**
-```json
-{
-  "error": "Loan not found"
-}
-```
-
----
-
-#### Create New Loan
-```http
-POST /api/loans
-Content-Type: application/json
-```
-
-**Request Body:**
-```json
-{
-  "borrower_id": "usr_india_001",
-  "amount": 5000.00,
-  "currency": "INR",
-  "term_months": 12,
-  "interest_rate_apr": 18.5
-}
-```
-
-**Validation Rules:**
-- `amount`: Must be > 0 and ≤ 50,000
-- `term_months`: Must be positive integer
-- `interest_rate_apr`: Must be ≥ 0
-- `status`: Defaults to "pending" if not provided
-
-**Response (201 Created):**
-```json
-{
-  "id": 5,
-  "borrower_id": "usr_india_001",
-  "amount": 5000.00,
-  "currency": "INR",
-  "term_months": 12,
-  "interest_rate_apr": 18.5,
-  "status": "pending",
-  "created_at": "2025-01-15T10:30:00Z"
-}
-```
-
-**Error Response (400):**
-```json
-{
-  "error": "Amount must be between 0 and 50000"
-}
-```
-
----
-
-#### Loan Statistics
-```http
-GET /api/stats
-```
-
-**Description:** Aggregated statistics across all loans
-
-**Response:**
-```json
-{
-  "total_loans": 25,
-  "total_amount": 125000.50,
-  "average_amount": 5000.02,
-  "by_status": {
-    "pending": 10,
-    "approved": 12,
-    "rejected": 3
-  },
-  "by_currency": {
-    "INR": 20,
-    "USD": 5
-  }
-}
-```
-
----
-
-#### Prometheus Metrics
-```http
-GET /metrics
-```
-
-**Description:** Prometheus-format metrics for monitoring
-
-**Response:** (Plain text)
-```
-# HELP loans_created_total Total number of loans created in the system
-# TYPE loans_created_total counter
-loans_created_total 25.0
-
-# HELP flask_http_request_total Total HTTP requests
-# TYPE flask_http_request_total counter
-flask_http_request_total{method="GET",endpoint="/api/loans",status="200"} 120.0
-```
-
----
-
 ## Design Decisions
 
-This section explains the architectural and technical choices made in this project, specifically considering Branch International's operational context as a fintech serving emerging markets with microloans.
+This section explains the architectural and technical choices made in this project.
 
 ### 1. Multi-Stage Docker Builds
 
@@ -880,8 +659,6 @@ This section explains the architectural and technical choices made in this proje
 - **Image Size:** Final image is ~40% smaller (320MB vs 560MB) by excluding build dependencies
 - **Attack Surface:** Fewer packages = fewer potential vulnerabilities
 - **Industry Standard:** Aligns with container security best practices (NIST, CIS benchmarks)
-
-**Branch Context:** For a fintech handling sensitive financial data across India, Kenya, Nigeria, minimizing attack surface is critical. Smaller images also reduce bandwidth costs in emerging markets with limited infrastructure.
 
 **Trade-off:** Slightly more complex Dockerfile, but the security and efficiency gains far outweigh this complexity.
 
@@ -896,8 +673,6 @@ This section explains the architectural and technical choices made in this proje
 - **Performance:** 4 workers can handle ~4x concurrent requests (rule of thumb: 2-4 × CPU cores)
 - **Resilience:** If one worker crashes, others continue serving requests
 - **Production-Grade:** Gunicorn is battle-tested for production Flask deployments
-
-**Branch Context:** Microloans platforms experience bursty traffic patterns (paycheck cycles, month-end), requiring horizontal scalability. Multiple workers ensure consistent response times during peak loads.
 
 **Mathematical Justification:**
 - Average loan application takes ~200ms processing time
@@ -919,8 +694,6 @@ This section explains the architectural and technical choices made in this proje
 - **Security:** Centralizes TLS configuration (protocols, ciphers) in one place
 - **Production Pattern:** Industry standard for Python web services (Instagram, Pinterest, Dropbox use Nginx + Python)
 
-**Branch Context:** Fintech regulations (PCI-DSS, RBI guidelines in India, CBK in Kenya) mandate encrypted data in transit. Nginx provides enterprise-grade TLS 1.2/1.3 with perfect forward secrecy.
-
 **Why not Flask's built-in SSL?** Flask's Werkzeug WSGI server isn't designed for production SSL termination and lacks advanced features like HTTP/2, connection pooling, and rate limiting.
 
 ---
@@ -934,12 +707,7 @@ This section explains the architectural and technical choices made in this proje
 - **JSON Support:** Flexible schema for evolving loan products (jsonb columns for metadata)
 - **Full-Text Search:** Built-in search for borrower names, IDs without external services
 - **Mature Ecosystem:** Proven at scale (Instagram, Reddit, Stripe use PostgreSQL)
-- **Open Source:** No licensing costs for Branch's multi-country operations
-
-**Branch Context:**
-- **Regulatory Compliance:** Financial regulators require transaction logs and audit trails (PostgreSQL's WAL provides this)
-- **Data Integrity:** Loans involve money - database corruption is unacceptable
-- **Query Performance:** Advanced indexing (GiST, GIN) for complex loan portfolio queries
+- **Open Source:** No licensing costs
 
 **Alternatives Considered:**
 - **MySQL:** Weaker JSON support, historically less robust ACID guarantees
@@ -950,61 +718,12 @@ This section explains the architectural and technical choices made in this proje
 
 ---
 
-### 5. Alembic for Database Migrations
-
-**Decision:** Alembic (SQLAlchemy's migration tool) over raw SQL scripts
-
-**Rationale:**
-- **Version Control:** Every schema change is tracked, reviewed, and rolled back if needed
-- **Zero-Downtime Migrations:** Can add columns with defaults without locking tables
-- **Multi-Environment Support:** Same migrations work across dev/staging/prod
-- **Team Collaboration:** Prevents conflicting schema changes from different developers
-
-**Branch Context:** With teams across multiple countries (India, Kenya, Tanzania), coordinated schema changes are essential. Alembic prevents the "works on my machine" problem.
-
-**Real-World Scenario:**
-```sql
--- Bad: Manual SQL can't be rolled back easily
-ALTER TABLE loans ADD COLUMN risk_score INTEGER;
-
--- Good: Alembic migrations are versioned and reversible
-def upgrade():
-    op.add_column('loans', sa.Column('risk_score', sa.Integer(), nullable=True))
-
-def downgrade():
-    op.drop_column('loans', 'risk_score')
-```
-
----
-
-### 6. Environment-Specific Resource Limits
-
-**Decision:** Different CPU/memory allocations for dev/staging/prod
-
-**Rationale:**
-- **Cost Optimization:** Development doesn't need 1GB RAM (wastes money on cloud)
-- **Production Safety:** Resource limits prevent runaway processes from crashing the host
-- **Realistic Testing:** Staging mimics production constraints to catch resource issues early
-
-**Configuration:**
-```yaml
-Development:  256MB RAM, 0.5 CPU  (laptop-friendly)
-Staging:      512MB RAM, 1.0 CPU  (realistic testing)
-Production:   1GB RAM,   2.0 CPU  (high performance)
-```
-
-**Branch Context:** Operating in emerging markets requires cost efficiency. Over-provisioning dev environments wastes money; under-provisioning production risks downtime during loan disbursement peak hours.
-
-**Kubernetes Analogy:** These limits mirror K8s resource requests/limits, making migration to K8s seamless.
-
----
-
-### 7. Structured JSON Logging (Production)
+### 5. Structured JSON Logging (Production)
 
 **Decision:** JSON logs in production, human-readable logs in development
 
 **Rationale:**
-- **Machine Parseable:** ELK Stack, Datadog, Splunk can ingest JSON directly
+- **Machine Parseable:** Log aggregation systems can ingest JSON directly
 - **Correlation:** Include request IDs to trace requests across services
 - **Metrics from Logs:** Extract latency, error rates from log aggregation
 - **Compliance:** Financial audits require searchable, timestamped logs
@@ -1022,16 +741,11 @@ Production:   1GB RAM,   2.0 CPU  (high performance)
 }
 ```
 
-**Branch Context:** With operations across multiple countries, centralized logging is essential for:
-- **Fraud Detection:** Correlate suspicious loan patterns across regions
-- **Performance Monitoring:** Track API latency by country/endpoint
-- **Compliance Reporting:** Regulators require detailed transaction logs
-
 **Trade-off:** JSON logs are less readable for developers during debugging, hence we use human-readable logs in development.
 
 ---
 
-### 8. Doppler for Secrets Management
+### 6. Doppler for Secrets Management
 
 **Decision:** Use Doppler vault instead of .env files in CI/CD
 
@@ -1047,11 +761,6 @@ Production:   1GB RAM,   2.0 CPU  (high performance)
 3. Injected as environment variables at runtime
 4. Never written to disk or logs
 
-**Branch Context:** With remote teams and contractors, controlling access to production credentials is critical. Doppler prevents scenarios like:
-- Former employee still has production password
-- Developer accidentally commits `.env` with real credentials
-- Compromised laptop exposes all secrets
-
 **Alternatives Considered:**
 - **GitHub Secrets:** Limited to 48KB, no audit logs, harder to rotate
 - **AWS Secrets Manager:** Cloud lock-in, costs $0.40/secret/month
@@ -1059,12 +768,12 @@ Production:   1GB RAM,   2.0 CPU  (high performance)
 
 ---
 
-### 9. Trivy Security Scanning in CI/CD
+### 7. Trivy Security Scanning in CI/CD
 
 **Decision:** Scan Docker images for CVEs before deployment
 
 **Rationale:**
-- **Proactive Security:** Catch vulnerabilities before production (Equifax breach was preventable CVE)
+- **Proactive Security:** Catch vulnerabilities before production
 - **Compliance:** PCI-DSS requires regular vulnerability scanning
 - **Zero-Day Protection:** Trivy updates daily with latest CVE databases
 - **Fail-Fast:** Block deployment of critical vulnerabilities automatically
@@ -1073,11 +782,6 @@ Production:   1GB RAM,   2.0 CPU  (high performance)
 - **OS Packages:** Debian/Alpine base image vulnerabilities
 - **Python Libraries:** Known issues in Flask, SQLAlchemy, etc.
 - **Secret Detection:** Accidentally committed API keys (regex-based)
-
-**Branch Context:** Fintech companies are prime targets for attacks. A single vulnerability can lead to:
-- **Data Breach:** Expose borrower PII (fines up to 4% revenue under GDPR)
-- **Financial Loss:** Unauthorized loan disbursements
-- **Reputational Damage:** Loss of customer trust in emerging markets
 
 **Real-World Impact:**
 ```
@@ -1089,7 +793,7 @@ Pipeline Action: ❌ BLOCK deployment until patched
 
 ---
 
-### 10. Prometheus + Grafana for Observability
+### 8. Prometheus + Grafana for Observability
 
 **Decision:** Deploy monitoring stack alongside application
 
@@ -1097,18 +801,13 @@ Pipeline Action: ❌ BLOCK deployment until patched
 - **Real-Time Visibility:** Detect issues before customers complain
 - **Capacity Planning:** Track growth patterns to scale proactively
 - **SLA Compliance:** Measure uptime, latency against targets (e.g., 99.9% uptime)
-- **Incident Response:** Quickly identify what broke when on-call at 3 AM
+- **Incident Response:** Quickly identify what broke during on-call rotations
 
 **Key Metrics Tracked:**
 - **Throughput:** Requests per second (detect DDoS, viral growth)
 - **Latency:** p50, p95, p99 response times (slow queries, network issues)
 - **Error Rate:** 4xx/5xx responses (deployment issues, bugs)
 - **Saturation:** CPU, memory, database connections (capacity limits)
-
-**Branch Context:**
-- **Loan Disbursement SLA:** Approved loans must disburse within 5 minutes (monitoring ensures this)
-- **Fraud Detection:** Sudden spike in loan applications = potential fraud ring
-- **Infrastructure Costs:** Track resource usage to optimize cloud spend
 
 **Why Prometheus?**
 - **Pull-Based:** Survives network partitions (metrics stored locally if Prometheus unreachable)
@@ -1122,7 +821,7 @@ Pipeline Action: ❌ BLOCK deployment until patched
 
 ---
 
-### 11. Single `docker-compose.yml` with Environment Profiles
+### 9. Single `docker-compose.yml` with Environment Profiles
 
 **Decision:** One Compose file with environment variables, not separate files
 
@@ -1159,70 +858,6 @@ docker-compose.prod.yml             # Production overrides
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up
 ```
 
-**Branch Context:** With teams in different time zones, simplicity reduces operational errors. A developer in India can deploy to staging using the same commands as a developer in Kenya.
-
----
-
-### 12. Health Checks at Multiple Levels
-
-**Decision:** Implement health checks in application code, Docker, and Nginx
-
-**Rationale:**
-- **Application Layer:** `/health` endpoint verifies Flask + database connectivity
-- **Docker Layer:** Container marked unhealthy if health check fails (prevents routing traffic)
-- **Nginx Layer:** Load balancer can remove unhealthy backends automatically
-
-**Layered Defense:**
-```
-1. App Health Check → Flask verifies DB connection (SELECT 1)
-2. Docker Health Check → Calls /health every 30s, restarts if fails 3 times
-3. Nginx Health Check → Removes unhealthy API containers from upstream pool
-```
-
-**Branch Context:**
-- **Zero-Downtime Deployments:** New container must pass health check before old one shuts down
-- **Database Maintenance:** If DB goes down, health check fails and app doesn't accept traffic (prevents errors)
-- **Multi-Region:** Health checks ensure only healthy regions serve traffic
-
-**Real-World Scenario:**
-```
-11:00 AM → Database maintenance starts
-11:00 AM → Health check detects DB unavailable
-11:00 AM → Docker marks container unhealthy
-11:00 AM → Nginx stops routing traffic to this instance
-11:05 AM → Maintenance completes, DB back online
-11:05 AM → Health check passes
-11:05 AM → Container marked healthy, traffic resumes
-```
-
----
-
-### 13. Non-Root User in Docker Container
-
-**Decision:** Run Flask application as `appuser` (UID 1000), not root
-
-**Rationale:**
-- **Least Privilege:** If attacker exploits a vulnerability, they don't have root access to container
-- **Compliance:** CIS Docker Benchmark requires non-root containers
-- **Filesystem Protection:** Can't overwrite system files even if compromised
-
-**Implementation:**
-```dockerfile
-RUN useradd -m -u 1000 appuser && \
-    chown -R appuser:appuser /app
-USER appuser  # All subsequent commands run as this user
-```
-
-**Branch Context:**
-- **Regulatory Compliance:** Financial services regulators require principle of least privilege
-- **Defense in Depth:** Even if Flask has RCE vulnerability, attacker can't escalate to root
-- **Container Escape Prevention:** Harder to break out of container without root
-
-**What This Prevents:**
-- Attacker can't install malware at system level
-- Can't read `/etc/shadow` for password hashes
-- Can't bind to privileged ports (< 1024) without sudo
-
 ---
 
 ## Trade-offs & Future Improvements
@@ -1235,7 +870,7 @@ USER appuser  # All subsequent commands run as this user
 
 **Production Requirements:**
 - **JWT-based authentication** for stateless API access
-- **OAuth2 integration** with Branch's identity provider
+- **OAuth2 integration** with identity provider
 - **Role-Based Access Control (RBAC):** Separate permissions for borrowers, loan officers, admins
 - **API key management** for programmatic access
 
@@ -1258,8 +893,6 @@ USER appuser  # All subsequent commands run as this user
 - **Automated Failover:** Patroni or pg_auto_failover for zero-downtime recovery
 - **Connection Pooling:** PgBouncer to prevent connection exhaustion
 - **Backup & Recovery:** Automated daily backups with point-in-time recovery
-
-**Branch Context:** Loan disbursements can't be delayed by database downtime. RTO (Recovery Time Objective) should be < 5 minutes.
 
 **Implementation Path:**
 ```yaml
@@ -1345,8 +978,6 @@ spec:
         averageUtilization: 70
 ```
 
-**Why This Matters:** Handle traffic spikes (month-end loan rush) without manual intervention.
-
 ---
 
 #### 4. Distributed Tracing
@@ -1369,8 +1000,6 @@ Request: POST /api/loans (345ms total latency)
 ```
 
 **Implementation:** OpenTelemetry SDK with Flask instrumentation
-
-**Branch Context:** When customers complain "loan approval is slow," tracing shows exactly which service is the bottleneck (credit bureau API, fraud detection, etc.).
 
 ---
 
@@ -1397,8 +1026,6 @@ http {
 }
 ```
 
-**Why This Matters:** Prevents competitor scraping loan data or DDoS attacks during peak times.
-
 ---
 
 #### 6. Secrets Rotation Policy
@@ -1419,8 +1046,6 @@ doppler secrets set POSTGRES_PASSWORD "new_secure_password_$(date +%s)"
 kubectl rollout restart deployment/loan-api
 ```
 
-**Branch Context:** Compliance requirements (SOC 2, ISO 27001) mandate regular credential rotation.
-
 ---
 
 #### 7. Multi-Region Deployment
@@ -1428,7 +1053,7 @@ kubectl rollout restart deployment/loan-api
 **Current State:** Single-region deployment
 
 **Production Requirements:**
-- **Active-Active Setup:** Deploy to AWS us-east-1, ap-south-1 (India), af-south-1 (South Africa)
+- **Active-Active Setup:** Deploy to multiple AWS regions
 - **Geo-Routing:** Route customers to nearest region (reduce latency)
 - **Cross-Region Replication:** Postgres logical replication for disaster recovery
 
@@ -1437,8 +1062,6 @@ kubectl rollout restart deployment/loan-api
 Customer in Mumbai → Mumbai region:  50ms RTT
 Customer in Mumbai → US region:      250ms RTT  (5x slower)
 ```
-
-**Why This Matters:** Branch operates in 10+ countries. Local data centers improve user experience and comply with data residency laws (GDPR, India's data localization).
 
 ---
 
@@ -1484,69 +1107,6 @@ export default function() {
   });
 }
 ```
-
----
-
-#### 9. Blue-Green Deployments
-
-**Current State:** Direct deployment (potential downtime)
-
-**Production Requirements:**
-- **Blue-Green Strategy:** Run two identical environments, switch traffic instantly
-- **Canary Releases:** Route 10% traffic to new version, monitor, then full rollout
-- **Rollback in <30 seconds:** If issues detected, revert to previous version
-
-**Implementation with Kubernetes:**
-```yaml
-# Blue deployment (current production)
-apiVersion: v1
-kind: Service
-metadata:
-  name: loan-api
-spec:
-  selector:
-    app: loan-api
-    version: blue  # Route all traffic to blue
-
----
-# Green deployment (new version, no traffic yet)
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: loan-api-green
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: loan-api
-      version: green
-
-# Switch traffic: Change service selector from "blue" to "green"
-```
-
-**Why This Matters:** Branch disburses loans 24/7. Deployments can't cause downtime.
-
----
-
-#### 10. Cost Optimization
-
-**Current State:** Always-on resources
-
-**Production Requirements:**
-- **Spot Instances:** Use AWS Spot (70% cheaper) for non-critical workloads
-- **Scheduled Scaling:** Scale down at night (fewer loan applications)
-- **Resource Right-Sizing:** Continuously analyze and optimize container limits
-
-**Savings Example:**
-```
-Current: 10 × m5.large on-demand = $1,440/month
-Optimized:
-  - 3 × m5.large on-demand (baseline) = $432/month
-  - 7 × m5.large spot (auto-scaled) = $130/month
-Total: $562/month (61% savings)
-```
-
-**Branch Context:** Operating in price-sensitive markets requires cost discipline.
 
 ---
 
@@ -1720,36 +1280,6 @@ Access via: https://branchloans.com:8443
 
 ---
 
-#### Issue 5: Image Pull Failed (Rate Limit)
-
-**Symptoms:**
-```
-Error response from daemon: toomanyrequests: You have reached your pull rate limit
-```
-
-**Root Cause:** Docker Hub anonymous rate limit (100 pulls/6 hours)
-
-**Solution:**
-
-**Option 1 (Use GHCR instead):**
-```bash
-make pull  # Pulls from ghcr.io (no rate limits)
-make up-img-all ENV=dev
-```
-
-**Option 2 (Docker Hub login):**
-```bash
-docker login
-# Enter Docker Hub credentials (200 pulls/6 hours for free tier)
-```
-
-**Option 3 (Build locally):**
-```bash
-make up-all ENV=dev  # Builds image instead of pulling
-```
-
----
-
 #### Issue 6: Migrations Not Applied
 
 **Symptoms:**
@@ -1885,52 +1415,6 @@ git push
 
 ---
 
-#### Issue 10: High Memory Usage
-
-**Symptoms:**
-```bash
-docker stats
-# Shows API container using 90%+ of memory limit
-```
-
-**Root Cause:** Memory leak or insufficient allocation
-
-**Diagnosis:**
-
-1. **Check worker count:**
-   ```bash
-   docker compose --env-file .env.dev exec api ps aux
-   # Shows Gunicorn master + N workers
-   ```
-   Each worker uses ~100-150MB. Too many workers = OOM.
-
-2. **Profile memory:**
-   ```bash
-   docker compose --env-file .env.dev exec api python -m memory_profiler app/routes/loans.py
-   ```
-
-**Solution:**
-
-**Option 1 (Reduce workers):**
-Edit `.env.dev`:
-```bash
-API_WORKERS=1  # Reduce from 4 to 1
-```
-
-**Option 2 (Increase memory limit):**
-Edit `.env.dev`:
-```bash
-API_MEMORY_LIMIT=512m  # Increase from 256m
-```
-
-**Option 3 (Fix memory leak):**
-Look for:
-- Unclosed database sessions (`db.session.close()`)
-- Large lists kept in memory
-- Circular references preventing garbage collection
-
----
-
 ### Health Check Procedures
 
 #### Quick System Health Check
@@ -1972,52 +1456,16 @@ chmod +x check-health.sh
 
 ---
 
-#### Detailed Performance Check
-
-```bash
-# Check request latency (should be < 200ms)
-time curl -k https://branchloans.com/api/loans
-
-# Check memory usage (should be < 80% of limit)
-docker stats --no-stream | grep branch-app
-
-# Check database connections (should be < 20)
-docker compose --env-file .env.dev exec db psql -U postgres -d microloans -c "SELECT count(*) FROM pg_stat_activity"
-
-# Check disk usage (should be < 80%)
-docker system df
-```
-
----
-
-### When to Seek Additional Help
-
-Contact the DevOps team if:
-- **Database corruption:** Consistent health check failures after restart
-- **Memory exhaustion:** Repeated OOM (Out of Memory) kills
-- **Network issues:** Containers can't communicate despite healthy status
-- **Security incidents:** Unauthorized access attempts in logs
-- **Performance degradation:** Response times > 5 seconds under normal load
-
-**Escalation Path:**
-1. Check #devops-support Slack channel
-2. Review GitHub Issues for known problems
-3. Create detailed bug report with logs
-4. For production outages: Page on-call engineer
-
----
-
 ## Security Considerations
 
 ### Implemented Security Measures
 
 1. **TLS 1.2/1.3 Encryption:** All traffic encrypted in transit
-2. **Non-Root Containers:** Principle of least privilege
+2. **Non-Root Containers:** Principle of least privilege (appuser UID 1000)
 3. **Secrets Management:** Doppler vault, never in code
 4. **Vulnerability Scanning:** Trivy in CI/CD pipeline
 5. **Input Validation:** SQLAlchemy ORM prevents SQL injection
-6. **CORS Configuration:** Restrict cross-origin requests (production)
-7. **Health Check Isolation:** Unauthenticated endpoint doesn't expose sensitive data
+6. **Health Check Isolation:** Unauthenticated endpoint doesn't expose sensitive data
 
 ### Production Security Checklist
 
