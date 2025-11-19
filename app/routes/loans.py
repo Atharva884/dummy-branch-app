@@ -7,6 +7,8 @@ from ..database import SessionContext
 from ..models import Loan
 from ..schemas import CreateLoanRequest, LoanOut
 
+from ..metrics import loans_created_total
+
 bp = Blueprint("loans", __name__)
 
 @bp.route("/loans", methods=["GET"])
@@ -46,9 +48,22 @@ def create_loan():
             amount=Decimal(str(data.amount)),
             currency=data.currency.upper(),
             term_months=data.term_months,
-            interest_rate_apr=(Decimal(str(data.interest_rate_apr)) if data.interest_rate_apr is not None else None),
+            interest_rate_apr=(
+                Decimal(str(data.interest_rate_apr))
+                if data.interest_rate_apr is not None
+                else None
+            ),
             status="pending",
         )
+
         session.add(loan)
         session.flush()
-        return jsonify(LoanOut.model_validate(loan, from_attributes=True).model_dump()), 201
+
+        loans_created_total.inc()
+
+        return (
+            jsonify(
+                LoanOut.model_validate(loan, from_attributes=True).model_dump()
+            ),
+            201,
+        )

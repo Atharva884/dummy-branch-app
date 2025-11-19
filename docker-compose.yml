@@ -35,11 +35,14 @@ services:
       LOG_LEVEL: ${LOG_LEVEL}
       API_WORKERS: ${API_WORKERS}
       FLASK_DEBUG: ${FLASK_DEBUG}
+      DEBUG_METRICS: ${DEBUG_METRICS}
     volumes:
       - .:/app
     depends_on:
       db:
         condition: service_healthy
+    ports:
+      - "${PORT}:${PORT}"
     expose:
       - "${PORT}"
     command: ["sh", "/entrypoint.sh"]
