@@ -1,6 +1,7 @@
 services:
   db:
     image: postgres:16
+    container_name: branch-app-db
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -28,6 +29,7 @@ services:
     # Use the image from GitHub Container Registry
     # image: ghcr.io/atharva884/dummy-branch-app:latest 
     # platform: linux/amd64
+    container_name: branch-app-api
     environment:
       APP_ENV: ${APP_ENV}
       DATABASE_URL: ${DATABASE_URL}
@@ -87,10 +89,14 @@ services:
 
   grafana:
     image: grafana/grafana:latest
+    container_name: grafana
     ports:
       - "3000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/provisioning/dashboards-json:/var/lib/grafana/dashboards
     depends_on:
       - prometheus
     restart: unless-stopped

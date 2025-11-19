@@ -14,9 +14,6 @@ env:
 
 jobs:
 
-  # ==========================
-  #        TEST JOB
-  # ==========================
   test:
     name: Run Tests
     runs-on: ubuntu-latest
@@ -51,7 +48,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # --- Doppler -----------------------
       - name: Install Doppler CLI
         uses: dopplerhq/cli-action@v3
 
@@ -60,11 +56,9 @@ jobs:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
         run: doppler secrets download --no-file --format=docker >> $GITHUB_ENV
 
-      # --- Override DATABASE_URL for tests only ----
       - name: Override Database URL for Test Environment
         run: echo "DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5432/microloans_test" >> $GITHUB_ENV
 
-      # --- Run migrations and tests ----
       - name: Run database migrations
         run: alembic upgrade head
 
@@ -73,10 +67,6 @@ jobs:
           FLASK_ENV: testing
         run: pytest --verbose --tb=short
 
-
-  # ==========================
-  #        BUILD JOB
-  # ==========================
   build:
     name: Build Docker Image
     runs-on: ubuntu-latest
@@ -108,7 +98,6 @@ jobs:
             type=ref,event=branch
             type=raw,value=latest,enable={{is_default_branch}}
 
-      # --- Doppler -----------------------
       - name: Install Doppler CLI
         uses: dopplerhq/cli-action@v3
 
@@ -117,7 +106,6 @@ jobs:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
         run: doppler secrets download --no-file --format=docker >> $GITHUB_ENV
 
-      # --- Build image locally ---
       - name: Build Docker image
         id: build
         uses: docker/build-push-action@v5
@@ -143,10 +131,6 @@ jobs:
           path: /tmp/image.tar
           retention-days: 1
 
-
-  # ==========================
-  #     SECURITY SCAN JOB
-  # ==========================
   security-scan:
     name: Security Scan
     runs-on: ubuntu-latest
@@ -191,10 +175,6 @@ jobs:
           severity: "CRITICAL"
           exit-code: "1"
 
-
-  # ==========================
-  #        PUSH JOB
-  # ==========================
   push:
     name: Push to Registry
     runs-on: ubuntu-latest
@@ -231,8 +211,6 @@ jobs:
           tags: |
             type=sha
             type=raw,value=latest,enable={{is_default_branch}}
-
-      # ---- Doppler Not Needed Here ----
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
